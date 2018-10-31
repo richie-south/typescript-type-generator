@@ -1,0 +1,1 @@
+# typescript-type-generator
