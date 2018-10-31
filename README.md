@@ -4,5 +4,5 @@ Generate interfaces form javascript objects
 
 ## gif
 
-<img src="https://github.com/richie-south/typescript-type-generator/blob/master/medio/showcase.gif" width="500">
+<img src="https://github.com/richie-south/typescript-type-generator/blob/master/media/showcase.gif" width="500">
 
