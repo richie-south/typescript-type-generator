@@ -1,5 +1,5 @@
 {
-  "name": "typescript-type-generator",
+  "name": "typescript-interface-generator",
   "version": "0.0.1",
   "description": "type generator",
   "main": "./dist/index.js",
