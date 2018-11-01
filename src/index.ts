@@ -1,13 +1,27 @@
-import {IndentationText, Project} from 'ts-simple-ast'
+import {
+  IndentationText,
+  Project,
+  SourceFile,
+  InterfaceDeclaration,
+} from 'ts-simple-ast'
 import {capitalize} from './utils'
 
-function hasBeenCreatedBefore (interfaceDeclarations, interfaceDeclaration) {
+/**
+ * cheks if interface has been created before
+ */
+function hasBeenCreatedBefore(
+  interfaceDeclarations: Array<InterfaceDeclaration> = [],
+  interfaceDeclaration: InterfaceDeclaration
+): undefined | string {
   const newStructure = interfaceDeclaration.getStructure()
 
   let structureToRetrun
-  interfaceDeclarations.forEach((declaration) => {
+  interfaceDeclarations.forEach(declaration => {
     const oldStructure = declaration.getStructure()
-    if (JSON.stringify(oldStructure.properties) === JSON.stringify(newStructure.properties)) {
+    if (
+      JSON.stringify(oldStructure.properties) ===
+      JSON.stringify(newStructure.properties)
+    ) {
       structureToRetrun = oldStructure.name
     }
   })
@@ -15,57 +29,83 @@ function hasBeenCreatedBefore (interfaceDeclarations, interfaceDeclaration) {
   return structureToRetrun
 }
 
-function collectTypesFromArray (array, arrayName, file) {
-  const createdInterfaces = []
-  return array.map((value) => {
-    if (Array.isArray(value)) {
-      throw new Error('')
+/**
+ * checks all types of array, combines them to string
+ */
+function collectTypesFromArray(
+  array: Array<any>,
+  arrayName: string,
+  file: SourceFile,
+  createdInterfaces: Array<InterfaceDeclaration> = []
+) {
+  return (
+    array
+      .map(value => {
+        if (Array.isArray(value)) {
+          return collectTypesFromArray(
+            value,
+            `${arrayName}A`,
+            file,
+            createdInterfaces
+          )
+        } else if (value === null) {
+          return 'null'
+        } else if (typeof value === 'object') {
+          const capitalizedKey =
+            createdInterfaces.length === 0
+              ? capitalize(arrayName)
+              : capitalize(`${arrayName}${createdInterfaces.length}`)
 
-    } else if (value === null) {
-      return 'null'
+          const createdInterface = createInterface(value, capitalizedKey, file)
+          const oldInterfaceName = hasBeenCreatedBefore(
+            createdInterfaces,
+            createdInterface
+          )
 
-    } else if (typeof value === 'object') {
-      const capitalizedKey = createdInterfaces.length === 0
-        ? capitalize(arrayName)
-        : capitalize(`${arrayName}${createdInterfaces.length}`)
+          if (oldInterfaceName !== undefined) {
+            createdInterface.remove()
+            return oldInterfaceName
+          }
 
-      const createdInterface = createInterface(value, capitalizedKey, file)
-      const oldInterfaceName = hasBeenCreatedBefore(createdInterfaces, createdInterface)
+          createdInterfaces.push(createdInterface)
+          return capitalizedKey
+        }
 
-      if (oldInterfaceName !== undefined) {
-        createdInterface.remove()
-        return oldInterfaceName
-      }
+        return typeof value
+      })
+      // remove nested arrays
+      .reduce((a, b) => a.concat(b), [])
+      // only return uniq
+      .reduce((uniqTypes, type) => {
+        if (!uniqTypes.includes(type)) {
+          return [...uniqTypes, type]
+        }
+        return uniqTypes
+      }, [])
+      // build type string
+      .reduce((types, type, index) => {
+        if (index === 0) {
+          return `${type}`
+        }
 
-      createdInterfaces.push(createdInterface)
-      return capitalizedKey
-
-    }
-
-    return typeof value
-  })
-    .reduce((uniqTypes, type) => {
-      if (!uniqTypes.includes(type)) {
-        return [...uniqTypes, type]
-      }
-      return uniqTypes
-    }, [])
-    .reduce((types, type, index) => {
-      if (index === 0) {
-        return `${type}`
-      }
-
-      return `${types} | ${type}`
-    }, '')
+        return `${types} | ${type}`
+      }, '')
+  )
 }
 
-function createInterface (object, objectName, file) {
-
+/**
+ * creates one interface for object, supports nested objects and arrays
+ */
+function createInterface(
+  object: {[key: string]: any},
+  objectName: string,
+  file: SourceFile
+) {
   const interfaceDeclaration = file.addInterface({
     name: objectName,
   })
 
-  Object.keys(object).forEach((key) => {
+  Object.keys(object).forEach(key => {
     const name = key
     let typeName: string = typeof object[key]
 
@@ -88,11 +128,14 @@ function createInterface (object, objectName, file) {
   return interfaceDeclaration
 }
 
-export function createInterfacesFromObject (objectName, object) {
+export function createInterfacesFromObject(
+  objectName: string,
+  object: {[key: string]: any}
+) {
   const fileName = 'file.ts'
   const project = new Project({
     useVirtualFileSystem: true,
-    manipulationSettings: { indentationText: IndentationText.TwoSpaces },
+    manipulationSettings: {indentationText: IndentationText.TwoSpaces},
   })
   const fs = project.getFileSystem()
   const file = project.createSourceFile(fileName, '')
