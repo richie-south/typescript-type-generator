@@ -2,11 +2,13 @@
   "name": "typescript-type-generator",
   "version": "0.0.1",
   "description": "type generator",
-  "main": "src/index.js",
+  "main": "./dist/index.js",
   "scripts": {
-    "start": "rm -rf src/test.ts && node src/index.mjs",
+    "start": "node dist/index.js",
+    "start:example": "node example/example.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf dist && NODE_ENV=production ./node_modules/.bin/webpack --config webpack.config.js"
+    "build": "npx typescript"
+
   },
   "repository": {
     "type": "git",
@@ -26,7 +28,8 @@
   },
   "homepage": "https://github.com/richie-south/typescript-type-generator#readme",
   "devDependencies": {
-    "eslint": "^5.8.0"
+    "eslint": "^5.8.0",
+    "typescript": "^3.1.5"
   },
   "dependencies": {
     "ts-simple-ast": "^18.0.0"

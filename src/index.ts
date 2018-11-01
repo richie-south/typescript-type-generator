@@ -1,8 +1,5 @@
-const ts = require('ts-simple-ast')
-
-function capitalize (str) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
+import {IndentationText, Project} from 'ts-simple-ast'
+import {capitalize} from './utils'
 
 function hasBeenCreatedBefore (interfaceDeclarations, interfaceDeclaration) {
   const newStructure = interfaceDeclaration.getStructure()
@@ -70,32 +67,32 @@ function createInterface (object, objectName, file) {
 
   Object.keys(object).forEach((key) => {
     const name = key
-    let type = typeof object[key]
+    let typeName: string = typeof object[key]
 
     if (Array.isArray(object[key])) {
       const types = collectTypes(object[key], key, file)
-      type = `Array<${types === '' ? 'any' : types}>`
+      typeName = `Array<${types === '' ? 'any' : types}>`
     } else if (object[key] === null) {
-      type = 'null'
+      typeName = 'null'
     } else if (typeof object[key] === 'object') {
-      type = capitalize(key)
-      createInterface(object[key], type, file)
+      typeName = capitalize(key)
+      createInterface(object[key], typeName, file)
     }
 
     interfaceDeclaration.addProperty({
       name,
-      type,
+      type: typeName,
     })
   })
 
   return interfaceDeclaration
 }
 
-function createNewTypesFromObject (objectName, object) {
+export function createNewTypesFromObject (objectName, object) {
   const fileName = 'file.ts'
-  const project = new ts.Project({
+  const project = new Project({
     useVirtualFileSystem: true,
-    manipulationSettings: { indentationText: ts.IndentationText.TwoSpaces },
+    manipulationSettings: { indentationText: IndentationText.TwoSpaces },
   })
   const fs = project.getFileSystem()
   const file = project.createSourceFile(fileName, '')
@@ -105,6 +102,3 @@ function createNewTypesFromObject (objectName, object) {
   file.saveSync()
   return fs.readFileSync(fileName)
 }
-
-
-exports.createNewTypesFromObject = createNewTypesFromObject

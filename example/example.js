@@ -1,4 +1,4 @@
-const { createNewTypesFromObject } = require('../src/')
+const { createNewTypesFromObject } = require('../dist/')
 
 const code = createNewTypesFromObject(
   'User',
