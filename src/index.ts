@@ -15,7 +15,7 @@ function hasBeenCreatedBefore (interfaceDeclarations, interfaceDeclaration) {
   return structureToRetrun
 }
 
-function collectTypes (array, arrayName, file) {
+function collectTypesFromArray (array, arrayName, file) {
   const createdInterfaces = []
   return array.map((value) => {
     if (Array.isArray(value)) {
@@ -70,7 +70,7 @@ function createInterface (object, objectName, file) {
     let typeName: string = typeof object[key]
 
     if (Array.isArray(object[key])) {
-      const types = collectTypes(object[key], key, file)
+      const types = collectTypesFromArray(object[key], key, file)
       typeName = `Array<${types === '' ? 'any' : types}>`
     } else if (object[key] === null) {
       typeName = 'null'
@@ -88,7 +88,7 @@ function createInterface (object, objectName, file) {
   return interfaceDeclaration
 }
 
-export function createNewTypesFromObject (objectName, object) {
+export function createInterfacesFromObject (objectName, object) {
   const fileName = 'file.ts'
   const project = new Project({
     useVirtualFileSystem: true,

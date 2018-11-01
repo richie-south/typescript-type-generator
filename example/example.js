@@ -1,6 +1,6 @@
-const { createNewTypesFromObject } = require('../dist/')
+const { createInterfacesFromObject } = require('../dist/')
 
-const code = createNewTypesFromObject(
+const code = createInterfacesFromObject(
   'User',
   {
     id: 1,
