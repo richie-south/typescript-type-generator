@@ -2,3 +2,4 @@ example/
 media/
 .eslintrc.json
 .eslintignore
+src/
