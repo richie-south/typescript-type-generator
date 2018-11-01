@@ -7,7 +7,7 @@
     "start": "node dist/index.js",
     "start:example": "node example/example.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx typescript"
+    "build": "npx typescript --declaration"
 
   },
   "repository": {
