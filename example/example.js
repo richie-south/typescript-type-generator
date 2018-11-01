@@ -1,4 +1,4 @@
-const { createNewTypesFromObject } = require('./src/')
+const { createNewTypesFromObject } = require('../src/')
 
 const code = createNewTypesFromObject(
   'User',
