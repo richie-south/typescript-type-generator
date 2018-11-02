@@ -56,13 +56,13 @@ function collectTypesFromArray(
               ? capitalize(arrayName)
               : capitalize(`${arrayName}${createdInterfaces.length}`)
 
-          const createdInterface = createInterface(value, capitalizedKey, file)
+          const createdInterface = createInterface(value, capitalizedKey, file, '', createdInterfaces)
           const oldInterfaceName = hasBeenCreatedBefore(
             createdInterfaces,
             createdInterface
           )
 
-          if (oldInterfaceName !== undefined) {
+          if (oldInterfaceName) {
             createdInterface.remove()
             return oldInterfaceName
           }
@@ -99,7 +99,9 @@ function collectTypesFromArray(
 function createInterface(
   object: {[key: string]: any},
   objectName: string,
-  file: SourceFile
+  file: SourceFile,
+  parrentName: string = '',
+  createdInterfaces = []
 ) {
   const interfaceDeclaration = file.addInterface({
     name: objectName,
@@ -110,13 +112,27 @@ function createInterface(
     let typeName: string = typeof object[key]
 
     if (Array.isArray(object[key])) {
-      const types = collectTypesFromArray(object[key], key, file)
+      const types = collectTypesFromArray(object[key], key, file, createdInterfaces)
       typeName = `Array<${types === '' ? 'any' : types}>`
     } else if (object[key] === null) {
       typeName = 'null'
     } else if (typeof object[key] === 'object') {
-      typeName = capitalize(key)
-      createInterface(object[key], typeName, file)
+      const capitalizeKey = capitalize(key)
+      typeName = `${parrentName ? parrentName : ''}${capitalizeKey}`
+
+      const createdInterface = createInterface(object[key], typeName , file, capitalizeKey, createdInterfaces)
+      const oldInterfaceName = hasBeenCreatedBefore(
+        createdInterfaces,
+        createdInterface
+      )
+
+      if (oldInterfaceName) {
+        createdInterface.remove()
+      } else {
+        createdInterfaces.push(createdInterface)
+      }
+
+      /* createInterface(object[key], typeName , file, capitalizeKey) */
     }
 
     interfaceDeclaration.addProperty({
