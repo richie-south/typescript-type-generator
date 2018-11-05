@@ -28,7 +28,7 @@ console.log(code)
 /**
  ** OUTPUT **
 
- interface User {
+  interface User {
     id: number;
     data: Data;
   }
