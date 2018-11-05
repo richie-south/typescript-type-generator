@@ -4,30 +4,7 @@ import {
   SourceFile,
   InterfaceDeclaration,
 } from 'ts-simple-ast'
-import {capitalize} from './utils'
-
-/**
- * cheks if interface has been created before
- */
-function hasBeenCreatedBefore(
-  interfaceDeclarations: Array<InterfaceDeclaration> = [],
-  interfaceDeclaration: InterfaceDeclaration
-): undefined | string {
-  const newStructure = interfaceDeclaration.getStructure()
-
-  let structureToRetrun
-  interfaceDeclarations.forEach(declaration => {
-    const oldStructure = declaration.getStructure()
-    if (
-      JSON.stringify(oldStructure.properties) ===
-      JSON.stringify(newStructure.properties)
-    ) {
-      structureToRetrun = oldStructure.name
-    }
-  })
-
-  return structureToRetrun
-}
+import {capitalize, addOrRemoveInterface, buildTypeStringOfArrayTypes} from './utils'
 
 /**
  * checks all types of array, combines them to string
@@ -38,16 +15,25 @@ function collectTypesFromArray(
   file: SourceFile,
   createdInterfaces: Array<InterfaceDeclaration> = []
 ) {
-  return (
+  if (array.length === 0) {
+    return {
+      types: ['any'],
+      interfaces: createdInterfaces
+    }
+  }
+
+  const types = (
     array
       .map(value => {
         if (Array.isArray(value)) {
-          return collectTypesFromArray(
+          const {types, interfaces} = collectTypesFromArray(
             value,
             `${arrayName}A`,
             file,
             createdInterfaces
           )
+          createdInterfaces = interfaces
+          return types
         } else if (value === null) {
           return 'null'
         } else if (typeof value === 'object') {
@@ -56,19 +42,20 @@ function collectTypesFromArray(
               ? capitalize(arrayName)
               : capitalize(`${arrayName}${createdInterfaces.length}`)
 
-          const createdInterface = createInterface(value, capitalizedKey, file, '', createdInterfaces)
-          const oldInterfaceName = hasBeenCreatedBefore(
-            createdInterfaces,
-            createdInterface
+          const {interface: createdInterface, interfaces: newInterfaces} = createInterface(
+            value,
+            capitalizedKey,
+            file,
+            '',
+            createdInterfaces
+          )
+          const {interfaces, name} = addOrRemoveInterface(
+            createdInterface,
+            newInterfaces
           )
 
-          if (oldInterfaceName) {
-            createdInterface.remove()
-            return oldInterfaceName
-          }
-
-          createdInterfaces.push(createdInterface)
-          return capitalizedKey
+          createdInterfaces = interfaces
+          return name
         }
 
         return typeof value
@@ -80,17 +67,15 @@ function collectTypesFromArray(
         if (!uniqTypes.includes(type)) {
           return [...uniqTypes, type]
         }
+
         return uniqTypes
       }, [])
-      // build type string
-      .reduce((types, type, index) => {
-        if (index === 0) {
-          return `${type}`
-        }
-
-        return `${types} | ${type}`
-      }, '')
   )
+
+  return {
+    types,
+    interfaces: createdInterfaces
+  }
 }
 
 /**
@@ -101,7 +86,7 @@ function createInterface(
   objectName: string,
   file: SourceFile,
   parrentName: string = '',
-  createdInterfaces = []
+  createdInterfaces: Array<InterfaceDeclaration> = []
 ) {
   const interfaceDeclaration = file.addInterface({
     name: objectName,
@@ -112,27 +97,36 @@ function createInterface(
     let typeName: string = typeof object[key]
 
     if (Array.isArray(object[key])) {
-      const types = collectTypesFromArray(object[key], key, file, createdInterfaces)
-      typeName = `Array<${types === '' ? 'any' : types}>`
+      const {types, interfaces} = collectTypesFromArray(
+        object[key],
+        key,
+        file,
+        createdInterfaces
+      )
+      typeName = buildTypeStringOfArrayTypes(types)
+      createdInterfaces = interfaces
+
     } else if (object[key] === null) {
       typeName = 'null'
+
     } else if (typeof object[key] === 'object') {
       const capitalizeKey = capitalize(key)
       typeName = `${parrentName ? parrentName : ''}${capitalizeKey}`
 
-      const createdInterface = createInterface(object[key], typeName , file, capitalizeKey, createdInterfaces)
-      const oldInterfaceName = hasBeenCreatedBefore(
-        createdInterfaces,
-        createdInterface
+      const {interface: createdInterface, interfaces: newInterfaces} = createInterface(
+        object[key],
+        typeName,
+        file,
+        capitalizeKey,
+        createdInterfaces
+      )
+      const {interfaces, name} = addOrRemoveInterface(
+        createdInterface,
+        newInterfaces
       )
 
-      if (oldInterfaceName) {
-        createdInterface.remove()
-      } else {
-        createdInterfaces.push(createdInterface)
-      }
-
-      /* createInterface(object[key], typeName , file, capitalizeKey) */
+      typeName = name
+      createdInterfaces = interfaces
     }
 
     interfaceDeclaration.addProperty({
@@ -141,7 +135,10 @@ function createInterface(
     })
   })
 
-  return interfaceDeclaration
+  return {
+    interface: interfaceDeclaration,
+    interfaces: createdInterfaces
+  }
 }
 
 export function createInterfacesFromObject(
