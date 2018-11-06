@@ -12,7 +12,7 @@ npm install typescript-interface-generator
 
 ```javascript
 
-const { createInterfacesFromObject } = require('../dist/')
+import { createInterfacesFromObject } from 'typescript-interface-generator'
 
 const code = createInterfacesFromObject(
   'User',
@@ -62,6 +62,31 @@ console.log(code)
  */
 
 ```
+
+## API
+
+### createInterfacesFromObject
+
+Takes a name and a javascript object and returns a string with typescript interfaces
+
+**Syntax**
+
+```javascript
+  import { createInterfacesFromObject } from 'typescript-interface-generator'
+
+  createInterfacesFromObject('NAME', {})
+```
+
+***Parameters***
+
+* string
+  * name of (parent) interface
+* object
+  * object that should be turned to interfaces
+
+***Return value***
+
+string: contains typescript interfaces
 
 ## gif example
 
