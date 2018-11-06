@@ -4,7 +4,11 @@ import {
   SourceFile,
   InterfaceDeclaration,
 } from 'ts-simple-ast'
-import {capitalize, addOrRemoveInterface, buildTypeStringOfArrayTypes} from './utils'
+import {
+  capitalize,
+  addOrRemoveInterface,
+  buildTypeStringOfArrayTypes,
+} from './utils'
 
 /**
  * checks all types of array, combines them to string
@@ -18,63 +22,58 @@ function collectTypesFromArray(
   if (array.length === 0) {
     return {
       types: ['any'],
-      interfaces: createdInterfaces
+      interfaces: createdInterfaces,
     }
   }
 
-  const types = (
-    array
-      .map(value => {
-        if (Array.isArray(value)) {
-          const {types, interfaces} = collectTypesFromArray(
-            value,
-            `${arrayName}A`,
-            file,
-            createdInterfaces
-          )
-          createdInterfaces = interfaces
-          return types
-        } else if (value === null) {
-          return 'null'
-        } else if (typeof value === 'object') {
-          const capitalizedKey =
-            createdInterfaces.length === 0
-              ? capitalize(arrayName)
-              : capitalize(`${arrayName}${createdInterfaces.length}`)
+  const types = array
+    .map(value => {
+      if (Array.isArray(value)) {
+        const {types, interfaces} = collectTypesFromArray(
+          value,
+          `${arrayName}A`,
+          file,
+          createdInterfaces
+        )
+        createdInterfaces = interfaces
+        return types
+      } else if (value === null) {
+        return 'null'
+      } else if (typeof value === 'object') {
+        const capitalizedKey =
+          createdInterfaces.length === 0
+            ? capitalize(arrayName)
+            : capitalize(`${arrayName}${createdInterfaces.length}`)
 
-          const {interface: createdInterface, interfaces: newInterfaces} = createInterface(
-            value,
-            capitalizedKey,
-            file,
-            '',
-            createdInterfaces
-          )
-          const {interfaces, name} = addOrRemoveInterface(
-            createdInterface,
-            newInterfaces
-          )
+        const {
+          interface: createdInterface,
+          interfaces: newInterfaces,
+        } = createInterface(value, capitalizedKey, file, '', createdInterfaces)
+        const {interfaces, name} = addOrRemoveInterface(
+          createdInterface,
+          newInterfaces
+        )
 
-          createdInterfaces = interfaces
-          return name
-        }
+        createdInterfaces = interfaces
+        return name
+      }
 
-        return typeof value
-      })
-      // remove nested arrays
-      .reduce((a, b) => a.concat(b), [])
-      // only return uniq
-      .reduce((uniqTypes, type) => {
-        if (!uniqTypes.includes(type)) {
-          return [...uniqTypes, type]
-        }
+      return typeof value
+    })
+    // remove nested arrays
+    .reduce((a, b) => a.concat(b), [])
+    // only return uniq
+    .reduce((uniqTypes, type) => {
+      if (!uniqTypes.includes(type)) {
+        return [...uniqTypes, type]
+      }
 
-        return uniqTypes
-      }, [])
-  )
+      return uniqTypes
+    }, [])
 
   return {
     types,
-    interfaces: createdInterfaces
+    interfaces: createdInterfaces,
   }
 }
 
@@ -105,15 +104,16 @@ function createInterface(
       )
       typeName = buildTypeStringOfArrayTypes(types)
       createdInterfaces = interfaces
-
     } else if (object[key] === null) {
       typeName = 'null'
-
     } else if (typeof object[key] === 'object') {
       const capitalizeKey = capitalize(key)
       typeName = `${parrentName ? parrentName : ''}${capitalizeKey}`
 
-      const {interface: createdInterface, interfaces: newInterfaces} = createInterface(
+      const {
+        interface: createdInterface,
+        interfaces: newInterfaces,
+      } = createInterface(
         object[key],
         typeName,
         file,
@@ -137,7 +137,7 @@ function createInterface(
 
   return {
     interface: interfaceDeclaration,
-    interfaces: createdInterfaces
+    interfaces: createdInterfaces,
   }
 }
 
@@ -156,5 +156,7 @@ export function createInterfacesFromObject(
   createInterface(object, objectName, file)
 
   file.saveSync()
-  return fs.readFileSync(fileName)
+  const content = fs.readFileSync(fileName)
+  fs.delete(fileName)
+  return content
 }
