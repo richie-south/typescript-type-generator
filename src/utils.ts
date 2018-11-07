@@ -56,3 +56,11 @@ export function buildTypeStringOfArrayTypes (array: Array<string>) {
   const types = array.join(' | ')
   return `Array<${types}>`
 }
+
+export function keepUniq (uniqTypes, type) {
+  if (!uniqTypes.includes(type)) {
+    return [...uniqTypes, type]
+  }
+
+  return uniqTypes
+}
