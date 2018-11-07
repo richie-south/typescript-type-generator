@@ -8,7 +8,36 @@ import {
   capitalize,
   addOrRemoveInterface,
   buildTypeStringOfArrayTypes,
+  keepUniq,
 } from './utils'
+
+/**
+ * created new interface and then removes it if it already exists
+ */
+function fromNestedObject(
+  objectName: string,
+  value: object,
+  file: SourceFile,
+  createdInterfaces: Array<InterfaceDeclaration> = [],
+  parentName: string = ''
+) {
+  const {interface: createdInterface, interfaces} = createInterface(
+    value,
+    objectName,
+    file,
+    parentName,
+    createdInterfaces
+  )
+  const {interfaces: newInterfaces, name} = addOrRemoveInterface(
+    createdInterface,
+    interfaces
+  )
+
+  return {
+    interfaces: newInterfaces,
+    name,
+  }
+}
 
 /**
  * checks all types of array, combines them to string
@@ -40,18 +69,16 @@ function collectTypesFromArray(
       } else if (value === null) {
         return 'null'
       } else if (typeof value === 'object') {
-        const capitalizedKey =
+        const typeName =
           createdInterfaces.length === 0
             ? capitalize(arrayName)
             : capitalize(`${arrayName}${createdInterfaces.length}`)
 
-        const {
-          interface: createdInterface,
-          interfaces: newInterfaces,
-        } = createInterface(value, capitalizedKey, file, '', createdInterfaces)
-        const {interfaces, name} = addOrRemoveInterface(
-          createdInterface,
-          newInterfaces
+        const {name, interfaces} = fromNestedObject(
+          typeName,
+          value,
+          file,
+          createdInterfaces
         )
 
         createdInterfaces = interfaces
@@ -62,14 +89,7 @@ function collectTypesFromArray(
     })
     // remove nested arrays
     .reduce((a, b) => a.concat(b), [])
-    // only return uniq
-    .reduce((uniqTypes, type) => {
-      if (!uniqTypes.includes(type)) {
-        return [...uniqTypes, type]
-      }
-
-      return uniqTypes
-    }, [])
+    .reduce(keepUniq, [])
 
   return {
     types,
@@ -107,22 +127,15 @@ function createInterface(
     } else if (object[key] === null) {
       typeName = 'null'
     } else if (typeof object[key] === 'object') {
-      const capitalizeKey = capitalize(key)
-      typeName = `${parrentName ? parrentName : ''}${capitalizeKey}`
+      const keyName = capitalize(key)
+      typeName = `${parrentName ? parrentName : ''}${keyName}`
 
-      const {
-        interface: createdInterface,
-        interfaces: newInterfaces,
-      } = createInterface(
-        object[key],
+      const {interfaces, name} = fromNestedObject(
         typeName,
+        object[key],
         file,
-        capitalizeKey,
-        createdInterfaces
-      )
-      const {interfaces, name} = addOrRemoveInterface(
-        createdInterface,
-        newInterfaces
+        createdInterfaces,
+        keyName
       )
 
       typeName = name
