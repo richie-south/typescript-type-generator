@@ -78,7 +78,8 @@ function collectTypesFromArray(
           typeName,
           value,
           file,
-          createdInterfaces
+          createdInterfaces,
+          typeName
         )
 
         createdInterfaces = interfaces
