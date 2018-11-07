@@ -157,6 +157,104 @@ interface BC {
     expect(result).to.equal(expected)
   })
 
+  it('Should create uniq props interfaces', () => {
+    const expected = `interface User {
+  id: number;
+  data: Data;
+}
+
+interface Data {
+  props: DataProps;
+  articles: Array<Articles1 | Articles4 | Articles6>;
+}
+
+interface DataProps {
+  a: number;
+  b: string;
+}
+
+interface Articles1 {
+  title: string;
+  props: Articles1Props;
+}
+
+interface Articles1Props {
+  a: number;
+  b: PropsB;
+}
+
+interface PropsB {
+  foo: string;
+}
+
+interface Articles4 {
+  title: string;
+  props: Articles4Props;
+}
+
+interface Articles4Props {
+  a: boolean;
+  b: boolean;
+}
+
+interface Articles6 {
+  title: string;
+  props: Articles6Props;
+}
+
+interface Articles6Props {
+  c: null;
+  d: number;
+}
+`
+    const result = createInterfacesFromObject('User', {
+      id: 2,
+      data: {
+        props: {
+          a: 1,
+          b: 'b',
+        },
+        articles: [
+          {
+            title: '1',
+            props: {
+              a: 100,
+              b: {
+                foo: 'foo',
+              },
+            },
+          },
+          {
+            title: '2',
+            props: {
+              a: 100,
+              b: {
+                foo: 'foo',
+              },
+            },
+          },
+          {
+            title: '3',
+            props: {
+              a: true,
+              b: false,
+            },
+          },
+          {
+            title: '3',
+            props: {
+              c: null,
+              d: 10,
+            },
+          },
+        ],
+      },
+    })
+
+    expect(result).to.have.entriesCount('interface', 10)
+    expect(result).to.equal(expected)
+  })
+
   it('Should create advanced', () => {
     const expected = `interface User {
   id: number;
@@ -183,10 +281,10 @@ interface Articles2 {
   title: string;
   id: number;
   content: string;
-  props: Props;
+  props: Articles2Props;
 }
 
-interface Props {
+interface Articles2Props {
   views: number;
   structure: PropsStructure;
 }
