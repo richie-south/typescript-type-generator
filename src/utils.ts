@@ -2,8 +2,14 @@ import {
   InterfaceDeclaration,
 } from 'ts-simple-ast'
 
-export function capitalize (str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
+export function capitalizeInterfaceName (str: string) {
+  const char = str.charAt(0)
+  if (!isNaN(Number(char))) {
+    // prefix with A, interface cannot be named with numbers
+    return `A${str}`
+  }
+
+  return char.toUpperCase() + str.slice(1)
 }
 
 /**

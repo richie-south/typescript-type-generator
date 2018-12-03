@@ -5,7 +5,7 @@ import {
   InterfaceDeclaration,
 } from 'ts-simple-ast'
 import {
-  capitalize,
+  capitalizeInterfaceName,
   addOrRemoveInterface,
   buildTypeStringOfArrayTypes,
   keepUniq,
@@ -71,8 +71,8 @@ function collectTypesFromArray(
       } else if (typeof value === 'object') {
         const typeName =
           createdInterfaces.length === 0
-            ? capitalize(arrayName)
-            : capitalize(`${arrayName}${createdInterfaces.length}`)
+            ? capitalizeInterfaceName(arrayName)
+            : capitalizeInterfaceName(`${arrayName}${createdInterfaces.length}`)
 
         const {name, interfaces} = fromNestedObject(
           typeName,
@@ -128,7 +128,7 @@ function createInterface(
     } else if (object[key] === null) {
       typeName = 'null'
     } else if (typeof object[key] === 'object') {
-      const keyName = capitalize(key)
+      const keyName = capitalizeInterfaceName(key)
       typeName = `${parrentName ? parrentName : ''}${keyName}`
 
       const {interfaces, name} = fromNestedObject(
