@@ -19,6 +19,23 @@ describe('Structure', () => {
     expect(result).to.startsWith('interface MyInter')
     expect(result).to.equal(expected)
   })
+
+  it('Should prefix number object structures interface with A', () => {
+    const expected = `interface MyInter {
+  123: A123;
+}
+
+interface A123 {
+}
+`
+    const result = createInterfacesFromObject('MyInter', {
+      '123': {},
+    })
+    console.log(result)
+    expect(result).to.have.entriesCount('interface', 2)
+    expect(result).to.startsWith('interface MyInter')
+    expect(result).to.equal(expected)
+  })
 })
 
 describe('objects', () => {
